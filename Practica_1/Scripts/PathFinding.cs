@@ -2,6 +2,7 @@
 
     using System.Collections;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using UnityEngine;
 
     public class PathFinding : MonoBehaviour {
@@ -14,23 +15,40 @@
         public Tablero tablero_;
 
         void Update() {
-            seeker = tablero_.getTank();
-            target = tablero_.getCandy();
-            if (seeker != null && target != null) {
-                FindPath(seeker.pos, target.pos);
+
+            if (Input.GetButtonDown("Jump")) {
+                seeker = tablero_.getTank();
+                target = tablero_.getCandy();
+                if (seeker != null && target != null) {
+                    FindPath(seeker.pos, target.pos);
+                }
             }
         }
 
         // Bicho tocho A*
         private void FindPath(Position initPos, Position targetPos) {
+
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+
             Casilla startCasilla = tablero_.GetBlock(initPos);
             Casilla targetCasilla = tablero_.GetBlock(targetPos);
 
-            List<Casilla> openSet = new List<Casilla>();
+            UnityEngine.Debug.Log(ToString() + "Incredibile1");
+
+            //List<Casilla> openSet = new List<Casilla>();
+            //El error ocurre al inicializar el Heap
+            Heap<Casilla> openSet = new Heap<Casilla>(tablero_.MaxSize);
             HashSet<Casilla> closedSet = new HashSet<Casilla>();
             openSet.Add(startCasilla);
 
+            UnityEngine.Debug.Log(ToString() + "Incredibile2");
+
             while(openSet.Count > 0) {
+                Casilla currentCasilla = openSet.RemoveFirst();
+
+                //Esta es la parte mas costosa del algoritmo (solo con listas)
+                /*
                 Casilla currentCasilla = openSet[0];
                 for (int i = 1; i < openSet.Count; i++) {
                     // Coomparamos los fCost de las casillas
@@ -39,11 +57,17 @@
                     }
                 }
 
+                //Hasta aqui
+
                 openSet.Remove(currentCasilla);
+                */
                 closedSet.Add(currentCasilla);
 
                 //En caso de que lleguemos al caramelo
                 if (currentCasilla == targetCasilla) {
+                    sw.Stop();
+                    UnityEngine.Debug.Log(ToString() + "Path found: " + sw.ElapsedMilliseconds + " ms");
+
                     RetracePath(startCasilla, targetCasilla);
                     return;
                 }

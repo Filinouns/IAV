@@ -9,8 +9,16 @@
     public class Tablero : MonoBehaviour {
 
         private List<Casilla> path_;
+        private int rows_, cols_;
 
         public void setPath(List<Casilla> p) { path_ = p; }
+
+        public int MaxSize {
+            get {
+                //return casillas_.Length;
+                return rows_ * cols_;
+            }
+        }
 
         //Constantes
         public static readonly float USER_DELAY = 0.0f;
@@ -51,16 +59,22 @@
         public Casilla getCandy() { return candy_; }
         public void setCandy (Casilla c) { candy_ = c; }
 
-        private void Awake() {
-            path = GetComponent<PathFinding>();
-        }
+        //----------------------------------UPDATE----------------------------
 
         void Update() {
             if (path_ != null) {
-                foreach (Casilla cell in casillas_) {
-                    if (path_.Contains(cell)) {
-                        tank_.setObjetive(true);
-                        //showPath(); //Only for debbug
+                if (StopMoving()) {
+                    //Debug.Log(ToString() + "Parando!");
+                    tank_.setObjetive(false);
+                    path_ = null;
+                }
+                else {
+                    foreach (Casilla cell in casillas_) {
+                        if (path_.Contains(cell))
+                        {
+                            tank_.setObjetive(true);
+                            //showPath(); //Only for debbug
+                        }
                     }
                 }
             }
@@ -85,6 +99,9 @@
                 casillas_ = new Casilla[m.rows, m.cols];
                 transform.localScale = new Vector3(SCALE_FACTOR_C * casillas_.GetLength(1), transform.localScale.y, SCALE_FACTOR_R * casillas_.GetLength(0));
             }
+
+            rows_ = checked((int)m.rows);
+            cols_ = checked((int)m.cols);
 
             GenerateCasillas(m);
 
@@ -113,11 +130,80 @@
             casillas_[r, c] = cell;
         }
 
+        // Obtener la casilla mediante una posicion
+        public Casilla GetBlock(Position position) {
+            if (position == null) throw new ArgumentNullException(nameof(position));
+
+            return casillas_[position.GetRow(), position.GetColumn()];
+        }
+
+        //----------------------------Cosas del Tanque--------------------------
+
+        //Comprobacion para terminar el movimiento
+        private bool StopMoving() {
+            bool move = false;
+
+            if (tank_.getSteps() + 1 >= path_.Capacity) move = true;
+
+            return move;
+        }
+
         //Nos devuelve la posicion del siguiente paso del camino del tank
         public Vector3 MoveTank(int steps) {
             if (path_ == null) throw new InvalidOperationException("This object has not been initialized");
 
             return path_[steps].transform.position;
+        }
+
+        // Metodo para obtener los 8 vecinos de una casilla
+        public List<Casilla> Get8Neighbours(Casilla cell)
+        {
+            List<Casilla> neighbours = new List<Casilla>();
+
+            for (int r = -1; r <= 1; r++) {
+                for (int c = -1; c <= 1; c++) {
+                    if (r == 0 && c == 0) continue;
+
+                    int checkCol = Mathf.RoundToInt(cell.pos.GetColumn() + r);
+                    int checkRow = Mathf.RoundToInt(cell.pos.GetRow() + c);
+
+                    if (checkCol >= 0 && checkCol < casillas_.GetLength(0) && checkRow >= 0 && checkRow < casillas_.GetLength(1))
+                    {
+                        neighbours.Add(casillas_[checkRow, checkCol]);
+                    }
+                }
+            }
+            return neighbours;
+        }
+
+        public List<Casilla> Get4Neighbours(Casilla cell)
+        {
+            List<Casilla> neighbours = new List<Casilla>();
+
+            for (int r = -1; r <= 1; r++)
+            {
+                if (r == 0) continue;
+
+                int checkCol = Mathf.RoundToInt(cell.pos.GetColumn() + r);
+
+                if (checkCol >= 0 && checkCol < casillas_.GetLength(0))
+                {
+                    neighbours.Add(casillas_[0, checkCol]);
+                }
+            }
+
+            for (int c = -1; c <= 1; c++)
+            {
+                if (c == 0) continue;
+
+                int checkRow = Mathf.RoundToInt(cell.pos.GetRow() + c);
+
+                if (checkRow >= 0 && checkRow < casillas_.GetLength(1))
+                {
+                    neighbours.Add(casillas_[checkRow, 0]);
+                }
+            }
+            return neighbours;
         }
 
         //--------------------------------Privates--------------------
@@ -228,61 +314,9 @@
             }
         }
 
-        // Metodo para obtener los 8 vecinos de una casilla
-        public List<Casilla> Get8Neighbours(Casilla cell) {
-            List<Casilla> neighbours = new List<Casilla>();
-
-            for(int r = -1; r <= 1; r++) {
-                for (int c = -1; c <= 1; c++) {
-                    if (r == 0 && c == 0) continue;
-
-                    int checkCol = Mathf.RoundToInt(cell.pos.GetColumn() + r);
-                    int checkRow = Mathf.RoundToInt(cell.pos.GetRow() + c);
-
-                    if (checkCol >= 0 && checkCol < casillas_.GetLength(0) && checkRow >= 0 && checkRow < casillas_.GetLength(1)) {
-                        neighbours.Add(casillas_[checkRow, checkCol]);
-                    }
-                }
-            }
-            return neighbours;
-        }
-
-        public List<Casilla> Get4Neighbours(Casilla cell) {
-            List<Casilla> neighbours = new List<Casilla>();
-
-            for (int r = -1; r <= 1; r++) {
-                if (r == 0) continue;
-
-                int checkCol = Mathf.RoundToInt(cell.pos.GetColumn() + r);
-
-                if (checkCol >= 0 && checkCol < casillas_.GetLength(0)) {
-                    neighbours.Add(casillas_[0, checkCol]);
-                }
-            }
-
-            for (int c = -1; c <= 1; c++)
-            {
-                if (c == 0) continue;
-
-                int checkRow = Mathf.RoundToInt(cell.pos.GetRow() + c);
-
-                if (checkRow >= 0 && checkRow < casillas_.GetLength(1)) {
-                    neighbours.Add(casillas_[checkRow, 0]);
-                }
-            }
-            return neighbours;
-        }
-
-        // Obtener la casilla mediante una posicion
-        public Casilla GetBlock(Position position) {
-            if (position == null) throw new ArgumentNullException(nameof(position));
-
-            return casillas_[position.GetRow(), position.GetColumn()];
-        }
-
         //-----------------Debbuging tools--------------------
 
-        //Te muestra la posicion de cada casilla y su tipo
+        //Te muestra la posicion de cada casilla en el tablero y su tipo
         public void show() {
             for (int r = 0; r < casillas_.GetLength(0); r++) {
                 for (int c = 0; c < casillas_.GetLength(1); c++) {

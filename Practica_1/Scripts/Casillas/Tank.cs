@@ -24,6 +24,7 @@ namespace Game_Tank {
         //----------Update---------------
         void Update() {
             if (haveObjetive) {
+                RecalculateTargetPosition(board_.MoveTank(steps));
                 Move();
             }
         }

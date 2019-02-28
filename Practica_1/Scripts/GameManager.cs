@@ -67,7 +67,7 @@
             //UpdateInfo();
 
             //------Pruebas--------
-            board.GiveCandy(7, 5);
+            board.GiveCandy(20, 20);
 
             //board.show();
         }

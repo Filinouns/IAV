@@ -1,12 +1,11 @@
-﻿namespace Game_Tank {  
+﻿namespace Game_Tank {
 
     using System;
-
     using System.Collections;
     using System.Collections.Generic;
     using UnityEngine;
 
-    public class Casilla : MonoBehaviour {
+    public class Casilla : MonoBehaviour, IHeapItem<Casilla> {
 
         public int gCost;
         public int hCost;
@@ -17,6 +16,27 @@
             }
         }
 
+        public int HeapIndex {
+            // Lo comentado provoca stackOverflow porque llama todo el rato al get
+            /*get {
+                return HeapIndex;
+            }
+            set {
+                HeapIndex = value;
+            }*/
+            get;
+            set;
+        }
+
+        public int CompareTo(Casilla nodeToCompare) {
+            int compare = fCost.CompareTo(nodeToCompare.fCost);
+            if (compare == 0) {
+                compare = hCost.CompareTo(nodeToCompare.hCost);
+            }
+            return -compare;
+        }
+
+        //Casilla a la que apunta en el path
         public Casilla parent;
 
         //El tablero de casillas
