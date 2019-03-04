@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 8143246408192296513}
   - component: {fileID: 1993925726676969939}
   - component: {fileID: 1389208866660698306}
+  - component: {fileID: 7268816202056625414}
   m_Layer: 0
   m_Name: Barro
   m_TagString: Untagged
@@ -104,5 +105,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bbb7419a5b2307645b156cf7886aae37, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  gCost: 0
+  hCost: 0
+  parent: {fileID: 0}
   candy_: 0
   type_: 0
+--- !u!54 &7268816202056625414
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 367461604222747867}
+  serializedVersion: 2
+  m_Mass: 1
+  m_Drag: 0
+  m_AngularDrag: 0.05
+  m_UseGravity: 0
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0

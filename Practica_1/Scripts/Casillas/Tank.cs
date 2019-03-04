@@ -1,7 +1,7 @@
 ﻿
 using UnityEngine;
 
-namespace Game_Tank { 
+namespace Game_Tank {
     public class Tank : Casilla {
 
         public float movementSpeed = 1f;
@@ -15,6 +15,11 @@ namespace Game_Tank {
         private int steps = 0;
 
         public int getSteps() { return steps; }
+
+        public bool selected {
+            get;
+            set;
+        }
 
         //-------------Start---------------
         void Start() {

@@ -34,15 +34,11 @@
             Casilla startCasilla = tablero_.GetBlock(initPos);
             Casilla targetCasilla = tablero_.GetBlock(targetPos);
 
-            UnityEngine.Debug.Log(ToString() + "Incredibile1");
-
             //List<Casilla> openSet = new List<Casilla>();
             //El error ocurre al inicializar el Heap
             Heap<Casilla> openSet = new Heap<Casilla>(tablero_.MaxSize);
             HashSet<Casilla> closedSet = new HashSet<Casilla>();
             openSet.Add(startCasilla);
-
-            UnityEngine.Debug.Log(ToString() + "Incredibile2");
 
             while(openSet.Count > 0) {
                 Casilla currentCasilla = openSet.RemoveFirst();

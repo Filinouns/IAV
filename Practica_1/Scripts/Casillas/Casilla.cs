@@ -61,16 +61,11 @@
             }
         }
 
-        public void OnMouseUpAsButton()
-        {
+        public void OnMouseUpAsButton() {
             if (board_ == null) throw new InvalidOperationException("This object has not been initialized");
 
-            //board_.GiveCandy(this.board_.pos)
-            //Quitar el anterior caramelo
-            //board_.quitarCarameloAnterior();
-
-            Debug.Log(ToString() + "Tienes un caramelo ahi");
-            //return false;
+            if (type_ != 5) board_.changeCasilla(this);
+            else board_.activateTank();
         }
     }
 }

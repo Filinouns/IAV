@@ -108,7 +108,7 @@
             InitTank();
         }
 
-        //Seleccionar una casilla con Candy
+        //Seleccionar una casilla con Candy (Solo se usa en el init de game manager para colocar la primera casilla)
         public void GiveCandy(uint r, uint c) {
             Casilla cell = casillas_[r, c];
             if (cell != null) {
@@ -206,7 +206,151 @@
             return neighbours;
         }
 
+        public void activateTank() {
+            if (tank_.selected) tank_.selected = false;
+            else tank_.selected = true;
+        }
+
+        // Cambia un tipo de casilla por otra
+        public void changeCasilla(Casilla c) {
+            Casilla cel;
+            if (!tank_.selected) {
+                if (tank_.pos != c.pos) { // Si la posicion de la casilla y el tanque no es la misma
+                    switch (c.type_)
+                    {
+                        case 0: // El suelo pasa a ser agua
+                            cel = Instantiate(aguaPrefab,
+                            new Vector3(-((casillas_.GetLength(1) / 2.0f) * POSITION_FACTOR_C - (POSITION_FACTOR_C / 2.0f)) + c.pos.GetColumn() * POSITION_FACTOR_C,
+                                         0,
+                                         (casillas_.GetLength(0) / 2.0f) * POSITION_FACTOR_R - (POSITION_FACTOR_R / 2.0f) - c.pos.GetRow() * POSITION_FACTOR_R),
+                            Quaternion.identity);
+
+                            cel.pos = c.pos;
+                            cel.Init(this, 1);
+                            Destroy(casillas_[c.pos.GetRow(), c.pos.GetColumn()].gameObject); //Borramos la casilla a cambiar
+                            casillas_[cel.pos.GetRow(), cel.pos.GetColumn()] = cel; //Asignamos la nueva casilla
+                            break;
+                        case 1: // El agua pasa a ser barro
+                            cel = Instantiate(barroPrefab,
+                            new Vector3(-((casillas_.GetLength(1) / 2.0f) * POSITION_FACTOR_C - (POSITION_FACTOR_C / 2.0f)) + c.pos.GetColumn() * POSITION_FACTOR_C,
+                                         0,
+                                         (casillas_.GetLength(0) / 2.0f) * POSITION_FACTOR_R - (POSITION_FACTOR_R / 2.0f) - c.pos.GetRow() * POSITION_FACTOR_R),
+                            Quaternion.identity);
+                            cel.pos = c.pos;
+                            cel.Init(this, 2);
+                            Destroy(casillas_[c.pos.GetRow(), c.pos.GetColumn()].gameObject); //Borramos la casilla a cambiar
+                            casillas_[cel.pos.GetRow(), cel.pos.GetColumn()] = cel; //Asignamos la nueva casilla
+                            break;
+                        case 2: // El barro pasa a ser muro
+                            cel = Instantiate(muroPrefab,
+                            new Vector3(-((casillas_.GetLength(1) / 2.0f) * POSITION_FACTOR_C - (POSITION_FACTOR_C / 2.0f)) + c.pos.GetColumn() * POSITION_FACTOR_C,
+                                         0,
+                                         (casillas_.GetLength(0) / 2.0f) * POSITION_FACTOR_R - (POSITION_FACTOR_R / 2.0f) - c.pos.GetRow() * POSITION_FACTOR_R),
+                            Quaternion.identity);
+                            cel.pos = c.pos;
+                            cel.Init(this, 3);
+                            Destroy(casillas_[c.pos.GetRow(), c.pos.GetColumn()].gameObject); //Borramos la casilla a cambiar
+                            casillas_[cel.pos.GetRow(), cel.pos.GetColumn()] = cel; //Asignamos la nueva casilla
+                            break;
+                        case 3: // El muro pasa a ser suelo
+                            cel = Instantiate(sueloPrefab,
+                            new Vector3(-((casillas_.GetLength(1) / 2.0f) * POSITION_FACTOR_C - (POSITION_FACTOR_C / 2.0f)) + c.pos.GetColumn() * POSITION_FACTOR_C,
+                                         0,
+                                         (casillas_.GetLength(0) / 2.0f) * POSITION_FACTOR_R - (POSITION_FACTOR_R / 2.0f) - c.pos.GetRow() * POSITION_FACTOR_R),
+                            Quaternion.identity);
+                            cel.pos = c.pos;
+                            cel.Init(this, 0);
+                            Destroy(casillas_[c.pos.GetRow(), c.pos.GetColumn()].gameObject); //Borramos la casilla a cambiar
+                            casillas_[cel.pos.GetRow(), cel.pos.GetColumn()] = cel; //Asignamos la nueva casilla
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            }
+            else
+            {
+                resetPath();
+                switch (c.type_) {
+                    case 0: // Nuevo candy!
+                        createCandy(c);
+                        break;
+                    case 1: // Nuevo candy!
+                        createCandy(c);
+                        break;
+                    case 2: // Nuevo candy!
+                        createCandy(c);
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+
         //--------------------------------Privates--------------------
+
+        private void resetPath() {
+            path_ = null;
+            tank_.setObjetive(false);
+        }
+
+        //Crea un candy en la posicion de la casilla que le pasas
+        private void createCandy(Casilla c) {
+            deleteLastCandy();
+
+            Casilla cel = Instantiate(candyPrefab,
+                            new Vector3(-((casillas_.GetLength(1) / 2.0f) * POSITION_FACTOR_C - (POSITION_FACTOR_C / 2.0f)) + c.pos.GetColumn() * POSITION_FACTOR_C,
+                                         0,
+                                         (casillas_.GetLength(0) / 2.0f) * POSITION_FACTOR_R - (POSITION_FACTOR_R / 2.0f) - c.pos.GetRow() * POSITION_FACTOR_R),
+                            Quaternion.identity);
+            cel.pos = c.pos;
+            cel.Init(this, 4);
+            cel.candy_ = true;
+            setCandy(cel);
+
+            Destroy(casillas_[c.pos.GetRow(), c.pos.GetColumn()].gameObject); //Borramos la casilla a cambiar
+            casillas_[cel.pos.GetRow(), cel.pos.GetColumn()] = cel; //Asignamos la nueva casilla
+        }
+
+        //Elimina el candy actual y lo sustituye por una casilla pisable cualquiera
+        private void deleteLastCandy() {
+            Casilla cel = null;
+            switch (UnityEngine.Random.Range(0, 3)) {
+                case 0: //Creamos un suelo
+                    cel = Instantiate(sueloPrefab,
+                            new Vector3(-((casillas_.GetLength(1) / 2.0f) * POSITION_FACTOR_C - (POSITION_FACTOR_C / 2.0f)) + candy_.pos.GetColumn() * POSITION_FACTOR_C,
+                                         0,
+                                         (casillas_.GetLength(0) / 2.0f) * POSITION_FACTOR_R - (POSITION_FACTOR_R / 2.0f) - candy_.pos.GetRow() * POSITION_FACTOR_R),
+                            Quaternion.identity);
+                    cel.pos = candy_.pos;
+                    cel.Init(this, 0);
+                    break;
+                case 1: //Creamos un agua
+                    cel = Instantiate(aguaPrefab,
+                            new Vector3(-((casillas_.GetLength(1) / 2.0f) * POSITION_FACTOR_C - (POSITION_FACTOR_C / 2.0f)) + candy_.pos.GetColumn() * POSITION_FACTOR_C,
+                                         0,
+                                         (casillas_.GetLength(0) / 2.0f) * POSITION_FACTOR_R - (POSITION_FACTOR_R / 2.0f) - candy_.pos.GetRow() * POSITION_FACTOR_R),
+                            Quaternion.identity);
+                    cel.pos = candy_.pos;
+                    cel.Init(this, 1);
+                    break;
+                case 2: //Creamos un barro
+                    cel = Instantiate(barroPrefab,
+                            new Vector3(-((casillas_.GetLength(1) / 2.0f) * POSITION_FACTOR_C - (POSITION_FACTOR_C / 2.0f)) + candy_.pos.GetColumn() * POSITION_FACTOR_C,
+                                         0,
+                                         (casillas_.GetLength(0) / 2.0f) * POSITION_FACTOR_R - (POSITION_FACTOR_R / 2.0f) - candy_.pos.GetRow() * POSITION_FACTOR_R),
+                            Quaternion.identity);
+                    cel.pos = candy_.pos;
+                    cel.Init(this, 2);
+                    break;
+                default:
+                    break;
+            }
+            if (cel != null) {
+                Destroy(casillas_[candy_.pos.GetRow(), candy_.pos.GetColumn()].gameObject);
+                casillas_[cel.pos.GetRow(), cel.pos.GetColumn()] = cel;
+            }
+        }
 
         // Inicializacion del Tanke
         private void InitTank() {

@@ -39,8 +39,7 @@
             Init(rows_, cols_);
         }
 
-        private void Init(uint rows, uint cols)
-        {
+        private void Init(uint rows, uint cols) {
             if (board == null) throw new InvalidOperationException("The board reference is null");
             /*
             if (infoPanel_ == null) throw new InvalidOperationException("The infoPanel reference is null");
