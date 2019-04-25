@@ -123,7 +123,7 @@
                     int newMovementCostToNeighbour;
                     //--------------------Modo 0-------------------
                     if (!mode2) {
-                        newMovementCostToNeighbour = currentCasilla.gCost + PenaltyDistance(currentCasilla, neighbour);
+                        newMovementCostToNeighbour = currentCasilla.gCost + ManhattanDistance(currentCasilla, neighbour) + neighbour.penalty *10;
 
                         if (newMovementCostToNeighbour < neighbour.gCost || !openSet.Contains(neighbour))
                         {
