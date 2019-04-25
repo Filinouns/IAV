@@ -7,8 +7,10 @@
 
     public class Casilla : MonoBehaviour, IHeapItem<Casilla> {
 
-        public int gCost;
-        public int hCost;
+        [HideInInspector] public int gCost; // Distancia a la casilla inicial
+        [HideInInspector] public int hCost; // Distancia al objetivo
+
+        public int penalty;
 
         public int fCost {
             get {
@@ -16,6 +18,7 @@
             }
         }
 
+       
         public int HeapIndex {
             // Lo comentado provoca stackOverflow porque llama todo el rato al get
             /*get {
@@ -37,15 +40,15 @@
         }
 
         //Casilla a la que apunta en el path
-        public Casilla parent;
+        [HideInInspector] public Casilla parent;
 
         //El tablero de casillas
         protected Tablero board_;
 
-        public Position pos;
+        [HideInInspector] public Position pos;
 
-        public bool candy_ = false;
-        public uint type_;
+        [HideInInspector] public bool candy_ = false;
+        [HideInInspector] public uint type_;
 
         public void Init(Tablero board, uint t) {
             if (board == null) throw new ArgumentNullException(nameof(board));
@@ -53,12 +56,13 @@
             board_ = board;
             type_ = t;
 
-            if (type_ == 6) {   //Desactivar algunas (las default)
+            this.gameObject.SetActive(true);
+            /*if (type_ == 6) {   //Desactivar algunas (las default)
                 this.gameObject.SetActive(false);
             }
             else {
                 this.gameObject.SetActive(true);
-            }
+            }*/
         }
 
         public void OnMouseUpAsButton() {

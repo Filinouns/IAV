@@ -1,9 +1,9 @@
 ﻿
 namespace Game_Tank
 {
-    public class Agua : Casilla
+    public class Bandera : Casilla
     {
-       
+
         void Start()
         {
 

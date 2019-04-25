@@ -11,7 +11,7 @@
         enum CType { Suelo, Agua, Barro, Muro, Candy, Tank, Default };
 
         //const int NumCasillas = 7;
-        //private const int square[NumCasillas] = { 0, 1, 2, 3, 4, 5, 6 };
+        //private const int square[NumCasillas] = { 0, 1, 2, 3, 4, 5, 6, 7 };
         
 
         // La matriz de valores (enteros sin signo) 
@@ -111,6 +111,7 @@
         // 4 -> Candy
         // 5 -> Tank
         // 6 -> Default
+        // 7 -> flechas
         // Los randoms estan bastante inventados, se puede juguetear con ellos :)
         private uint GenerateRandSeed() {
             int type = 6; //Casilla default (desactivada)
@@ -136,7 +137,7 @@
                     type = 3; //Muro
                 }
             } else {
-                type = 6;   // default
+                type = 0;   // default
             }
             
             uint i = (uint)type;

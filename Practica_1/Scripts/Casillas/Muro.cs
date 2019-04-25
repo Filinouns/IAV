@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace Game_Tank {
     public class Muro : Casilla {
+
+       
+
         void Start() {
             
         }

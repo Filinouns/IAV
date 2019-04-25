@@ -107,6 +107,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gCost: 0
   hCost: 0
+  penalty: 1
   parent: {fileID: 0}
   candy_: 0
   type_: 0

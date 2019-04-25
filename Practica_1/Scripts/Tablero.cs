@@ -3,12 +3,17 @@
     using System;
     using System.Collections;
     using System.Collections.Generic;
+    using System.Linq;
 
     using UnityEngine;
 
     public class Tablero : MonoBehaviour {
 
         private List<Casilla> path_;
+        private List<Casilla> flechas_ = new List<Casilla>();
+
+        [HideInInspector] public float cost;
+
         private int rows_, cols_;
 
         public void setPath(List<Casilla> p) { path_ = p; }
@@ -37,6 +42,8 @@
         public Casilla barroPrefab;
         public Casilla candyPrefab;
         public Tank tankPrefab;
+        public Casilla banderaPrefab;
+        public Casilla flechaPrefab;
 
         //GameManager
         private GameManager gm_;
@@ -62,22 +69,7 @@
         //----------------------------------UPDATE----------------------------
 
         void Update() {
-            if (path_ != null) {
-                if (StopMoving()) {
-                    //Debug.Log(ToString() + "Parando!");
-                    tank_.setObjetive(false);
-                    path_ = null;
-                }
-                else {
-                    foreach (Casilla cell in casillas_) {
-                        if (path_.Contains(cell))
-                        {
-                            tank_.setObjetive(true);
-                            //showPath(); //Only for debbug
-                        }
-                    }
-                }
-            }
+            actualizarRuta();
         }
 
         // ----------------------------Public------------------------
@@ -88,17 +80,10 @@
 
             gm_ = gm;
 
-            // Si el vector de casillas esta sin inicializar lo inicializamos
-            if (casillas_ == null) {
-                casillas_ = new Casilla[m.rows, m.cols];
-                transform.localScale = new Vector3(SCALE_FACTOR_C * casillas_.GetLength(1), transform.localScale.y, SCALE_FACTOR_R * casillas_.GetLength(0));
-            }
-            // Sino destruimos las existente y creamos uno nuevo
-            else if (casillas_.GetLength(0) != m.rows || casillas_.GetLength(1) != m.cols) {
-                DestroyCasillas();
-                casillas_ = new Casilla[m.rows, m.cols];
-                transform.localScale = new Vector3(SCALE_FACTOR_C * casillas_.GetLength(1), transform.localScale.y, SCALE_FACTOR_R * casillas_.GetLength(0));
-            }
+            // Inicializamos el vector de casillas
+            casillas_ = new Casilla[m.rows, m.cols];
+            transform.localScale = new Vector3(SCALE_FACTOR_C * casillas_.GetLength(1), transform.localScale.y, SCALE_FACTOR_R * casillas_.GetLength(0));
+            
 
             rows_ = checked((int)m.rows);
             cols_ = checked((int)m.cols);
@@ -106,6 +91,44 @@
             GenerateCasillas(m);
 
             InitTank();
+        }
+
+        
+
+        public void Reset(GameManager gm, Map m) {
+            if (gm == null) throw new ArgumentNullException(nameof(gm));
+            if (m == null) throw new ArgumentNullException(nameof(m));
+
+            gm_ = gm;
+
+            
+
+            DestroyCasillas();
+            path.setWorking(false);
+            destroyFlechas();
+            path_ = null;
+
+            casillas_ = new Casilla[m.rows, m.cols];
+            transform.localScale = new Vector3(SCALE_FACTOR_C * casillas_.GetLength(1), transform.localScale.y, SCALE_FACTOR_R * casillas_.GetLength(0));
+
+            rows_ = checked((int) m.rows);
+            cols_ = checked((int) m.cols);
+
+            GenerateCasillas(m);
+
+            ResetTank();
+        }
+
+        private void destroyFlechas()
+        {
+            if (flechas_ != null)
+            {
+                for (int i = 0; i < flechas_.Count; i++)
+                {
+                    Destroy(flechas_[i].gameObject);
+                }
+                flechas_ = new List<Casilla>();
+            }
         }
 
         //Seleccionar una casilla con Candy (Solo se usa en el init de game manager para colocar la primera casilla)
@@ -139,20 +162,75 @@
 
         //----------------------------Cosas del Tanque--------------------------
 
+        // Inicializacion del Tanke
+        private void InitTank() {
+            Tank t = Instantiate(tankPrefab,
+                           new Vector3(-((casillas_.GetLength(1) / 2.0f) * POSITION_FACTOR_C - (POSITION_FACTOR_C / 2.0f)) + 0 * POSITION_FACTOR_C,
+                                        1,
+                                        (casillas_.GetLength(0) / 2.0f) * POSITION_FACTOR_R - (POSITION_FACTOR_R / 2.0f) - 0 * POSITION_FACTOR_R),
+                           Quaternion.identity);
+
+            t.pos = new Position(0, 0);
+
+            t.Init(this, 5);
+
+            setTank(t);
+        }
+
+        // Elimina el tanque y crea uno nuevo
+        private void ResetTank() {
+            Destroy(tank_.gameObject);
+            InitTank();
+        }
+
+        //Actualiza la ruta del tank
+        private void actualizarRuta() {
+            if (path_ != null) {
+                if (!Moving()) {
+                    tank_.setObjetive(false);
+                    path.setWorking(false);
+                    path_ = null;
+                }
+                else
+                {
+                    Debug.Log(ToString() + "Coste: " + path.cost);
+                    if (path_.Contains(candy_)) {
+                        tank_.setObjetive(true);
+                        showPath();
+                    }
+                }
+            }
+        }
+
         //Comprobacion para terminar el movimiento
-        private bool StopMoving() {
-            bool move = false;
+        private bool Moving() {
+            bool move = true;
 
-            if (tank_.getSteps() + 1 >= path_.Capacity) move = true;
-
+            if (tank_.getSteps() >= path_.Count) {
+                move = false;
+            }
+           
             return move;
         }
 
         //Nos devuelve la posicion del siguiente paso del camino del tank
-        public Vector3 MoveTank(int steps) {
+        public Casilla MoveTank(int steps)
+        {
             if (path_ == null) throw new InvalidOperationException("This object has not been initialized");
 
-            return path_[steps].transform.position;
+            if (path_ != null)
+            {
+                if (steps > path_.Count - 1)
+                {
+                    return null;
+                }
+                else
+                {
+                    cost += path_[steps].penalty;
+                    return path_[steps];
+                }
+            }
+            return null;
         }
 
         // Metodo para obtener los 8 vecinos de una casilla
@@ -176,40 +254,46 @@
             return neighbours;
         }
 
+        // Busca los 4 vecinos de una casilla, en horizontal y vertical
         public List<Casilla> Get4Neighbours(Casilla cell)
         {
             List<Casilla> neighbours = new List<Casilla>();
 
             for (int r = -1; r <= 1; r++)
             {
-                if (r == 0) continue;
-
-                int checkCol = Mathf.RoundToInt(cell.pos.GetColumn() + r);
-
-                if (checkCol >= 0 && checkCol < casillas_.GetLength(0))
+                for (int c = -1; c <= 1; c++)
                 {
-                    neighbours.Add(casillas_[0, checkCol]);
-                }
-            }
+                    if (r == 0 && c == 0) continue;
+                    if (r== 0 || c == 0) { //Para no coger las diagonales
+                        int checkCol = Mathf.RoundToInt(cell.pos.GetColumn() + r);
+                        int checkRow = Mathf.RoundToInt(cell.pos.GetRow() + c);
 
-            for (int c = -1; c <= 1; c++)
-            {
-                if (c == 0) continue;
-
-                int checkRow = Mathf.RoundToInt(cell.pos.GetRow() + c);
-
-                if (checkRow >= 0 && checkRow < casillas_.GetLength(1))
-                {
-                    neighbours.Add(casillas_[checkRow, 0]);
+                        if (checkCol >= 0 && checkCol < casillas_.GetLength(0) && checkRow >= 0 && checkRow < casillas_.GetLength(1))
+                        {
+                            neighbours.Add(casillas_[checkRow, checkCol]);
+                        }
+                    }
                 }
             }
             return neighbours;
         }
 
+        // Cambia el estado del tank
         public void activateTank() {
             if (tank_.selected) tank_.selected = false;
             else tank_.selected = true;
         }
+
+        // Elimina el path y cambia el estado del tanque a "Sin objetivo"
+        private void resetPath() {
+            destroyFlechas();
+            path.cost = 0;
+            path_ = null;
+            path.setWorking(false);
+            tank_.setObjetive(false);
+        }
+
+        //-------------------------------------------------Interacciones con el tablero---------------------------------
 
         // Cambia un tipo de casilla por otra
         public void changeCasilla(Casilla c) {
@@ -289,20 +373,16 @@
 
         //--------------------------------Privates--------------------
 
-        private void resetPath() {
-            path_ = null;
-            tank_.setObjetive(false);
-        }
-
         //Crea un candy en la posicion de la casilla que le pasas
         private void createCandy(Casilla c) {
-            deleteLastCandy();
+            if (candy_ != null) deleteLastCandy();
 
-            Casilla cel = Instantiate(candyPrefab,
+            Casilla cel = Instantiate(banderaPrefab,
                             new Vector3(-((casillas_.GetLength(1) / 2.0f) * POSITION_FACTOR_C - (POSITION_FACTOR_C / 2.0f)) + c.pos.GetColumn() * POSITION_FACTOR_C,
                                          0,
                                          (casillas_.GetLength(0) / 2.0f) * POSITION_FACTOR_R - (POSITION_FACTOR_R / 2.0f) - c.pos.GetRow() * POSITION_FACTOR_R),
-                            Quaternion.identity);
+                            Quaternion.identity.normalized);
+            cel.transform.Rotate(0, 180, 0, Space.Self);
             cel.pos = c.pos;
             cel.Init(this, 4);
             cel.candy_ = true;
@@ -350,23 +430,6 @@
                 Destroy(casillas_[candy_.pos.GetRow(), candy_.pos.GetColumn()].gameObject);
                 casillas_[cel.pos.GetRow(), cel.pos.GetColumn()] = cel;
             }
-        }
-
-        // Inicializacion del Tanke
-        private void InitTank() {
-            //Destroy(casillas_[0, 0].gameObject);
-
-            Tank t = Instantiate(tankPrefab,
-                           new Vector3(-((casillas_.GetLength(1) / 2.0f) * POSITION_FACTOR_C - (POSITION_FACTOR_C / 2.0f)) + 0 * POSITION_FACTOR_C,
-                                        1,
-                                        (casillas_.GetLength(0) / 2.0f) * POSITION_FACTOR_R - (POSITION_FACTOR_R / 2.0f) - 0 * POSITION_FACTOR_R),
-                           Quaternion.identity);
-
-            t.pos = new Position(0, 0);
-
-            t.Init(this, 5);
-
-            setTank(t);
         }
 
         // Destruccion de todas las casillas del tablero
@@ -440,7 +503,7 @@
                                 break;
                             //Default
                             default:
-                                cel = Instantiate(casillaPrefab,
+                                cel = Instantiate(sueloPrefab,
                             new Vector3(-((casillas_.GetLength(1) / 2.0f) * POSITION_FACTOR_C - (POSITION_FACTOR_C / 2.0f)) + c * POSITION_FACTOR_C,
                                          0,
                                          (casillas_.GetLength(0) / 2.0f) * POSITION_FACTOR_R - (POSITION_FACTOR_R / 2.0f) - r * POSITION_FACTOR_R),
@@ -470,10 +533,31 @@
         }
 
         // Te enseña el camino hasta el candy
-        private void showPath() {
-            for (int i = 0; i < path_.Count; i++) {
-                path_[i].GetComponent<MeshRenderer>().material.color = Color.red;
-                //Debug.Log(ToString() + "Camino " + i + ": " + path_[i].pos);
+        public void showPath() {
+                for (int i = 0; i < path_.Count - 1; i++) {
+                Vector3 holi = path_[i].transform.position - path_[i + 1].transform.position;
+               
+                 Casilla cel = Instantiate(flechaPrefab, new Vector3(path_[i].transform.position.x, (float)0.3, path_[i].transform.position.z),
+                        Quaternion.identity.normalized);
+
+                    if (holi.x == 0 && holi.z > 0)
+                    {
+                        cel.transform.Rotate(new Vector3(0, 0, 0), Space.Self);
+                    }
+                    else if (holi.x < 0 && holi.z == 0)
+                    {
+                        cel.transform.Rotate(new Vector3(0, -90, 0), Space.Self);
+                    }
+                    else if (holi.x == 0 && holi.z < 0)
+                    {
+                        cel.transform.Rotate(new Vector3(0, 180, 0), Space.Self);
+                    }
+                    else if (holi.x > 0 && holi.z == 0)
+                    {
+                        cel.transform.Rotate(new Vector3(0, 90, 0), Space.Self);
+                    }
+                    cel.Init(this, 7);
+                    flechas_.Add(cel);
             }
         }
     }
