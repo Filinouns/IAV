@@ -7,15 +7,9 @@
 
     public class Casilla : MonoBehaviour, IHeapItem<Casilla> {
 
-        public int gCost; // Distancia a la casilla inicial
-        public int hCost; // Distancia al objetivo
+        [HideInInspector] public int gCost; // Distancia a la casilla inicial
+        [HideInInspector] public int hCost; // Distancia al objetivo
 
-        /* 
-         * Coste de atravesar cada casilla:
-         * Cesped -> 0
-         * Agua -> 10
-         * Barro -> 50
-         */
         public int penalty;
 
         public int fCost {
@@ -46,15 +40,15 @@
         }
 
         //Casilla a la que apunta en el path
-        public Casilla parent;
+        [HideInInspector] public Casilla parent;
 
         //El tablero de casillas
         protected Tablero board_;
 
-        public Position pos;
+        [HideInInspector] public Position pos;
 
-        public bool candy_ = false;
-        public uint type_;
+        [HideInInspector] public bool candy_ = false;
+        [HideInInspector] public uint type_;
 
         public void Init(Tablero board, uint t) {
             if (board == null) throw new ArgumentNullException(nameof(board));
@@ -62,12 +56,13 @@
             board_ = board;
             type_ = t;
 
-            if (type_ == 6) {   //Desactivar algunas (las default)
+            this.gameObject.SetActive(true);
+            /*if (type_ == 6) {   //Desactivar algunas (las default)
                 this.gameObject.SetActive(false);
             }
             else {
                 this.gameObject.SetActive(true);
-            }
+            }*/
         }
 
         public void OnMouseUpAsButton() {

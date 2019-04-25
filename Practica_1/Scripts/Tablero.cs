@@ -12,6 +12,8 @@
         private List<Casilla> path_;
         private List<Casilla> flechas_ = new List<Casilla>();
 
+        [HideInInspector] public float cost;
+
         private int rows_, cols_;
 
         public void setPath(List<Casilla> p) { path_ = p; }
@@ -191,10 +193,11 @@
                 }
                 else
                 {
-                        if (path_.Contains(candy_)) {
-                            tank_.setObjetive(true);
-                            showPath();
-                        }
+                    Debug.Log(ToString() + "Coste: " + path.cost);
+                    if (path_.Contains(candy_)) {
+                        tank_.setObjetive(true);
+                        showPath();
+                    }
                 }
             }
         }
@@ -203,7 +206,7 @@
         private bool Moving() {
             bool move = true;
 
-            if (tank_.getSteps()  >= path_.Count) {
+            if (tank_.getSteps() >= path_.Count) {
                 move = false;
             }
            
@@ -221,7 +224,11 @@
                 {
                     return null;
                 }
-                else return path_[steps];
+                else
+                {
+                    cost += path_[steps].penalty;
+                    return path_[steps];
+                }
             }
             return null;
         }
@@ -279,9 +286,8 @@
 
         // Elimina el path y cambia el estado del tanque a "Sin objetivo"
         private void resetPath() {
-
             destroyFlechas();
-         
+            path.cost = 0;
             path_ = null;
             path.setWorking(false);
             tank_.setObjetive(false);
@@ -497,7 +503,7 @@
                                 break;
                             //Default
                             default:
-                                cel = Instantiate(casillaPrefab,
+                                cel = Instantiate(sueloPrefab,
                             new Vector3(-((casillas_.GetLength(1) / 2.0f) * POSITION_FACTOR_C - (POSITION_FACTOR_C / 2.0f)) + c * POSITION_FACTOR_C,
                                          0,
                                          (casillas_.GetLength(0) / 2.0f) * POSITION_FACTOR_R - (POSITION_FACTOR_R / 2.0f) - r * POSITION_FACTOR_R),
@@ -528,13 +534,11 @@
 
         // Te enseña el camino hasta el candy
         public void showPath() {
-           
                 for (int i = 0; i < path_.Count - 1; i++) {
                 Vector3 holi = path_[i].transform.position - path_[i + 1].transform.position;
                
                  Casilla cel = Instantiate(flechaPrefab, new Vector3(path_[i].transform.position.x, (float)0.3, path_[i].transform.position.z),
                         Quaternion.identity.normalized);
-
 
                     if (holi.x == 0 && holi.z > 0)
                     {
@@ -552,14 +556,9 @@
                     {
                         cel.transform.Rotate(new Vector3(0, 90, 0), Space.Self);
                     }
-
                     cel.Init(this, 7);
                     flechas_.Add(cel);
-                 
             }
-           
-
-
         }
     }
 }
