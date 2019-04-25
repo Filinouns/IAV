@@ -1,24 +1,21 @@
 ﻿namespace Game_Tank {
 
     using System;
-    using System.Collections;
-    using System.Collections.Generic;
     using UnityEngine;
 
     public class Casilla : MonoBehaviour, IHeapItem<Casilla> {
 
-        [HideInInspector] public int gCost; // Distancia a la casilla inicial
-        [HideInInspector] public int hCost; // Distancia al objetivo
+        public int gCost; // Distancia a la casilla inicial
+        public int hCost; // Distancia al objetivo
 
         public int penalty;
 
         public int fCost {
             get {
-                return gCost + hCost;
+                return gCost + hCost + penalty * 10;
             }
         }
 
-       
         public int HeapIndex {
             // Lo comentado provoca stackOverflow porque llama todo el rato al get
             /*get {

@@ -123,7 +123,7 @@
                     int newMovementCostToNeighbour;
                     //--------------------Modo 0-------------------
                     if (!mode2) {
-                        newMovementCostToNeighbour = currentCasilla.gCost + ManhattanDistance(currentCasilla, neighbour) + neighbour.penalty *10;
+                        newMovementCostToNeighbour = currentCasilla.gCost + PenaltyDistance(currentCasilla, neighbour);
 
                         if (newMovementCostToNeighbour < neighbour.gCost || !openSet.Contains(neighbour))
                         {
@@ -247,6 +247,8 @@
 
         //Calculo del coste de movimiento por ManhattanDistance
         private int ManhattanDistance(Casilla a, Casilla b) {
+            int dstX = Mathf.RoundToInt(Mathf.Abs(a.pos.GetRow() - b.pos.GetRow()));
+            int dstY = Mathf.RoundToInt(Mathf.Abs(a.pos.GetColumn() - b.pos.GetColumn()));
             return 10 * Mathf.RoundToInt(Mathf.Abs(a.pos.GetRow() - b.pos.GetRow()) + Mathf.Abs(a.pos.GetColumn() - b.pos.GetColumn()));
         }
 
