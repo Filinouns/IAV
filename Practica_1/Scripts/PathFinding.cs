@@ -28,12 +28,13 @@
 
         public void setWorking(bool b) { working = b; }
 
+        [HideInInspector] public float cost;
 
         bool mode2 = false;
 
-        private void Start()
-        {
+        private void Start() {
             TiempoText_.text = "Tiempo: " + 0 + "ms";
+            cost = 0;
         }
 
         void Update() {
@@ -120,15 +121,14 @@
 
                     // A partir de aqui se calcula el coste de movimiento (hCost, gCost) 
                     int newMovementCostToNeighbour;
-                    if (!mode2)
-                    {
-                        newMovementCostToNeighbour = currentCasilla.gCost + ManhattanDistance(currentCasilla, neighbour) + neighbour.penalty;
-
+                    //--------------------Modo 0-------------------
+                    if (!mode2) {
+                        newMovementCostToNeighbour = currentCasilla.gCost + PenaltyDistance(currentCasilla, neighbour);
 
                         if (newMovementCostToNeighbour < neighbour.gCost || !openSet.Contains(neighbour))
                         {
                             neighbour.gCost = newMovementCostToNeighbour;
-                            neighbour.hCost = ManhattanDistance(neighbour, targetCasilla);
+                            neighbour.hCost = PenaltyDistance(neighbour, targetCasilla);
                             neighbour.parent = currentCasilla;
 
                             if (!openSet.Contains(neighbour))
@@ -141,13 +141,13 @@
                             }
                         }
                     }
-                    else
-                    {
+                    //---------------------Modo 2------------------
+                    else  {
                         newMovementCostToNeighbour = currentCasilla.gCost + GetDistance(currentCasilla, neighbour) + neighbour.penalty;
-
 
                         if (newMovementCostToNeighbour < neighbour.gCost || !openSet.Contains(neighbour))
                         {
+                            //cost += newMovementCostToNeighbour;
                             neighbour.gCost = newMovementCostToNeighbour;
                             neighbour.hCost = GetDistance(neighbour, targetCasilla);
                             neighbour.parent = currentCasilla;
@@ -237,6 +237,7 @@
             Casilla currentCasilla = endCasilla;
 
             while (currentCasilla != startCasilla) {
+                cost += currentCasilla.penalty;
                 path.Add(currentCasilla);
                 currentCasilla = currentCasilla.parent;
             }
@@ -244,11 +245,12 @@
             tablero_.setPath(path);
         }
 
-        private int ManhattanDistance(Casilla a, Casilla b)
-        {
+        //Calculo del coste de movimiento por ManhattanDistance
+        private int ManhattanDistance(Casilla a, Casilla b) {
             return 10 * Mathf.RoundToInt(Mathf.Abs(a.pos.GetRow() - b.pos.GetRow()) + Mathf.Abs(a.pos.GetColumn() - b.pos.GetColumn()));
         }
 
+        //Calculo original del coste de movimiento
         private int GetDistance(Casilla a, Casilla b) {
             int dstX = Mathf.RoundToInt(Mathf.Abs(a.pos.GetRow() - b.pos.GetRow()));
             int dstY = Mathf.RoundToInt(Mathf.Abs(a.pos.GetColumn() - b.pos.GetColumn()));
@@ -257,6 +259,17 @@
                 return 14 * dstY + 10 * (dstX - dstY);
             else
                 return 14 * dstX + 10 * (dstY - dstX);
+        }
+
+        private int PenaltyDistance(Casilla a, Casilla b) {
+            int dstX = Mathf.RoundToInt(Mathf.Abs(a.pos.GetRow() - b.pos.GetRow()));
+            int dstY = Mathf.RoundToInt(Mathf.Abs(a.pos.GetColumn() - b.pos.GetColumn()));
+            int penalty = b.penalty;
+
+            if (dstX > dstY)
+                return 10 * dstY + 10 * (dstX - dstY) + 10 * penalty;
+            else
+                return 10 * dstX + 10 * (dstY - dstX) + 10 * penalty;
         }
     }
 }

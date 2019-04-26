@@ -137,7 +137,7 @@
                     type = 3; //Muro
                 }
             } else {
-                type = 6;   // default
+                type = 0;   // default
             }
             
             uint i = (uint)type;
